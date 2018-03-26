@@ -135,7 +135,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, 51 Franklin Street, Boston, MA 02110-1301, USA
 
-function EEG = detecteyemovements(EEG,left_eye_xy,right_eye_xy,vfac,mindur,degperpixel,smooth,globalthresh,clusterdist,clustermode,plotfig,writesac,writefix)
+function EEG = detecteyemovements(EEG,left_eye_xy,right_eye_xy,vfac,mindur,degperpixel,smooth,globalthresh,clusterdist,clustermode,plotfig,writesac,writefix, removeBadFixations)
 
 allsac = [];
 allfix = [];
@@ -513,7 +513,7 @@ for e=1:nepochs
     %% remove fixations overlapping with "bad_ET" intervals
     % this includes fixations interrupted by a blink (!)
     % development note: loop is slow, need to implement more efficiently
-    if ~isempty(fix) & any(badvector(:))
+    if ~isempty(fix) & any(badvector(:)) && removeBadFixations
         badfix = false(size(fix,1),1); % preallocate logical
         
         % go tru fixations, check whether "bad"
