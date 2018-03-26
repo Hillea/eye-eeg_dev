@@ -125,6 +125,9 @@ end
 %% collect indices of out-of-range samples across all channels
 fprintf('\n%s(): Rejecting intervals with out-of-range eye track',mfilename)
 ix_bad = [];
+ix_bad2 = [];
+% seq_bad2 = [];
+
 for c = 1:length(chns)
     [chnid chntxt] = eeg_decodechan(EEG.chanlocs,chns(c)); % get channel names
     
@@ -139,11 +142,39 @@ for c = 1:length(chns)
         ix = find(EEG.data(chns(c),:) < minvals(c) );
     end
     ix_bad = [ix_bad ix];
+    
+    
+    %% add bad samples that are within range, but seem to be bad signal (e.g. very short (1 sample?) negative spikes)
+    % this would also find the transitions to the ix_bad epochs
+
+    threshold = 150*500/EEG.srate; % absolute value, impossible change between two samples (100 at 500Hz)
+
+    artefx = diff(EEG.data(chns(c),:)) < -threshold | diff(EEG.data(chns(c),:)) > threshold;
+    
+    % define streaks (possible to use findsequence2?)
+    q = diff([0 artefx 0]); % get 1s for onsets and -1s for offsets streaks
+    % Option 1: add to id_bad (doesn't work right now, overlapping epochs for bad ET
+    ix2 = find(q ~= 0); 
+    ix_bad2 = [ix_bad2, ix2];
+    
+%     % alternativ to immediately get on- and offset streaks: 
+%     % (then combine it w/ seq_bad!)
+%     startstreak = find(q==1);
+%     endstreak = find(q==-1);
+%     lenstreak = endstreak - startstreak;
+%     sb2 = [startstreak; endstreak; lenstreak]';
+%     seq_bad2 = [seq_bad2; sb2];  % there will be overlapping (4 channels!) epochs, but it should be taken care of w/ findsequence2 later? otherwise translate this into a bad_ix2 first (= streaks)
+    
+    
 end
+
+ix_bad = [ix_bad, ix_bad2];
+
 ix_bad = unique(ix_bad);
 if windowsize > 0
     fprintf('\nRejecting an extra plusminus %i samples (%.0f ms) around each out-of-range interval.',windowsize,windowsize*1000/EEG.srate)
 end
+
 
 %% bad samples found?
 if isempty(ix_bad)
@@ -184,8 +215,6 @@ else
             % Update march 2018 (OD)
             % Do not remove data, but introduce new bad_ET events in EEG.event
             fprintf('\nAdding %i bad_ET markers to the EEG.event structure...\nNot removing any data.\n\n',size(seq_bad,1))
-            % add duration of bad interval (in samples)
-            seq_bad(:,3) = seq_bad(:,2)-seq_bad(:,1) + 1;
             % add bad ET markers
             EEG = addevents(EEG,[seq_bad(:,1) seq_bad(:,3)],{'latency','duration'},'bad_ET');
             EEG = addevents(EEG,[seq_bad(:,2) ones(size(seq_bad,1),1)],{'latency','duration'},'bad_ET_stop');
