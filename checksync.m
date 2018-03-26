@@ -110,9 +110,6 @@ end
 %% compute cross correlation
 % based on entire recording (may include artifacts & loss of tracking!)
 
-% it seems like xcorr is part of the signal processing toolbox
-% workaround (from https://stackoverflow.com/questions/7396814/cross-correlation-in-matlab-without-using-the-inbuilt-function)
-
 % check whether signal processing toolbox installed
 v=ver; [installedToolboxes{1:length(v)}] = deal(v.Name);
 if all(ismember('Signal_Toolbox',installedToolboxes))  % not sure about name

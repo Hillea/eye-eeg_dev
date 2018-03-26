@@ -129,7 +129,7 @@
 % along with this program; if not, write to the Free Software
 % Foundation, 51 Franklin Street, Boston, MA 02110-1301, USA
 
-function [EEG, com] = pop_detecteyemovements(EEG, left_eye_xy, right_eye_xy, vfac, mindur, degperpixel, smooth, globalthresh, clusterdist, clustermode, plotfig, writesac, writefix)
+function [EEG, com] = pop_detecteyemovements(EEG, left_eye_xy, right_eye_xy, vfac, mindur, degperpixel, smooth, globalthresh, clusterdist, clustermode, plotfig, writesac, writefix, removeBadFixs)
 
 com = '';
 
@@ -145,7 +145,7 @@ try
     end
     
     % detect eye movements
-    EEG = detecteyemovements(EEG, left_eye_xy, right_eye_xy, vfac, mindur, degperpixel, smooth, globalthresh, clusterdist, clustermode, plotfig, writesac, writefix);
+    EEG = detecteyemovements(EEG, left_eye_xy, right_eye_xy, vfac, mindur, degperpixel, smooth, globalthresh, clusterdist, clustermode, plotfig, writesac, writefix, removeBadFixs);
     
 catch err
     if (strcmp(err.identifier,'MATLAB:unassignedOutputs'))
