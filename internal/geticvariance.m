@@ -1,5 +1,5 @@
 % geticvariance() - compute variance of independent component activations
-%                   during saccade and fixation intervals 
+%                   during saccade and fixation intervals
 %
 % Usage:
 %  >> [varsac,varfix] = geticvariance(EEG,sacstring,fixstring,tolerance)
@@ -97,7 +97,7 @@ if ~isempty(ix_sac) && ~isempty(ix_fix)
         % define samples belonging to saccade (with tolerance)
         lowr = saclat(ns) - tolerance(1);
         uppr = saclat(ns) + round(sacdur(ns))-1 + tolerance(2);
-       
+        
         if lowr <= 0, lowr = 1; end
         if uppr > size(icaact,2), uppr = size(icaact,2); end
         
@@ -105,7 +105,7 @@ if ~isempty(ix_sac) && ~isempty(ix_fix)
             same_epoch = false;
             % epoched data: make sure data is from same epoch
             epoch_lowr = floor((lowr-1)/epochlength)+1; % epoch @ start of window
-            epoch_uppr = floor((uppr-1)/epochlength)+1; % epoch @ end of window           
+            epoch_uppr = floor((uppr-1)/epochlength)+1; % epoch @ end of window
             if epoch_lowr == epoch_uppr
                 same_epoch = true;
             end
@@ -143,25 +143,50 @@ if ~isempty(ix_sac) && ~isempty(ix_fix)
             end
         else
             % catch extreme scenario: fixation duration is only 1 sample or
-            % the tolerance around saccade is set so high that the 
+            % the tolerance around saccade is set so high that the
             % remaining fixation interval is not even 2 samples long
             
             %fprintf('\nWarning: Remaining samples to compute fixation variance was less than 2 samples long. Skipped.')
         end
     end
     fprintf(' computed for %i of %i fixation intervals', sum(~isnan(varfix(1,:))),nf);
-       
-        
+    
+    
     if sum(~isnan(varsac(1,:))) ~= ns
         fprintf('\nNote: Variance was not computed for all saccade intervals, because intervals exceeded the epoch boundaries.');
     end
     if sum(~isnan(varfix(1,:))) ~= nf
         fprintf('\nNote: Variance was not computed for all fixation intervals, because intervals exceeded the epoch boundaries.\n');
     end
-        
+    
     % get mean sac and fix variances and the variance ratio (sac/fix)
-    varsac    = nanmean(varsac,2);
-    varfix    = nanmean(varfix,2);
+    % check for toolbox w/ nanmean
+    v=ver; [installedToolboxes{1:length(v)}] = deal(v.Name);
+    if all(ismember(['Financial_Toolbox','Statistics_Toolbox'],installedToolboxes))  % adjust names?
+        
+        % get means without NaNs (ORIGINAL EYE-EEG FUNCTION!!)
+        varsac    = nanmean(varsac,2);
+        varfix    = nanmean(varfix,2);
+        
+    else  % workaround
+        % doesnt work, obviously. indexing w/ isnan gives one vector. for
+        % loop? (can't really use reshape here, dim don't match anymore)
+        varsac_tmp = NaN(size(varsac,1),1);
+        varfix_tmp = NaN(size(varfix,1),1);
+        
+        for rws = 1:size(varsac,1)
+            varsac_tmp(rws) = mean(varsac(rws,~isnan(varsac(rws,:))),2);     
+        end
+        
+        for rwss = 1:size(varfix,1)
+            varfix_tmp(rwss,:) = mean(varfix(rwss,~isnan(varfix(rwss,:))),2);            
+        end
+        
+        % clear and overwrite varsac/varfix
+        varsac = []; varsac = varsac_tmp; 
+        varfix = []; varfix = varfix_tmp;
+    end
+    
 else
     % error message: no saccade or fixation events of this name found in EEG.event.type
     if isempty(ix_sac)
@@ -173,4 +198,5 @@ else
     else
         error('%s(): Saccade events found, but found no fixation events called \"%s\" in EEG.event.type!', mfilename, fixstring)
     end
+end
 end
