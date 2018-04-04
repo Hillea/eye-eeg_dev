@@ -141,7 +141,7 @@ end
 try
     if nargin < 11
         % pop up dialogue
-        [left_eye_xy, right_eye_xy, vfac, mindur, degperpixel, smooth, globalthresh, clusterdist, clustermode, plotfig, writesac, writefix] = dlg_detecteyemovements(mfilename, EEG.chanlocs, EEG.srate);       
+        [left_eye_xy, right_eye_xy, vfac, mindur, degperpixel, smooth, globalthresh, clusterdist, clustermode, plotfig, writesac, writefix, removeBadFixs] = dlg_detecteyemovements(mfilename, EEG.chanlocs, EEG.srate);       
     end
     
     % detect eye movements
